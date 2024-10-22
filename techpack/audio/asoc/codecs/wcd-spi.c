@@ -694,7 +694,7 @@ static int wcd_spi_clk_ctrl(struct spi_device *spi,
 		 * flags.
 		 */
 		if (flags == WCD_SPI_CLK_FLAG_DELAYED) {
-			schedule_delayed_work(&wcd_spi->clk_dwork,
+			queue_delayed_work(system_power_efficient_wq, &wcd_spi->clk_dwork,
 				msecs_to_jiffies(WCD_SPI_CLK_OFF_TIMER_MS));
 		} else {
 			ret = wcd_spi_clk_disable(spi);
@@ -1045,15 +1045,12 @@ static int wcd_spi_bus_gwrite(void *context, const void *reg,
 		return -EINVAL;
 	}
 
-#ifdef CONFIG_MACH_XIAOMI_SM8150
 	if (wcd_spi_is_suspended(wcd_spi)) {
 		dev_err(&spi->dev,
 		"%s: SPI suspended, cannot enable clk\n",
 		 __func__);
 		return -EIO;
 	}
-#endif
-
 	memset(tx_buf, 0, WCD_SPI_CMD_IRW_LEN);
 	tx_buf[0] = WCD_SPI_CMD_IRW;
 	tx_buf[1] = *((u8 *)reg);
@@ -1102,15 +1099,12 @@ static int wcd_spi_bus_read(void *context, const void *reg,
 			__func__, reg_len, val_len);
 		return -EINVAL;
 	}
-
-#ifdef CONFIG_MACH_XIAOMI_SM8150
 	if (wcd_spi_is_suspended(wcd_spi)) {
 		dev_err(&spi->dev,
 		"%s: SPI suspended, cannot enable clk\n",
 		__func__);
 		return -EIO;
 	}
-#endif
 
 	memset(tx_buf, 0, WCD_SPI_CMD_IRR_LEN);
 	tx_buf[0] = WCD_SPI_CMD_IRR;
@@ -1237,6 +1231,7 @@ static const struct file_operations mem_read_fops = {
 	.read = wcd_spi_debugfs_mem_read,
 };
 
+#ifdef CONFIG_DEBUG_FS
 static int wcd_spi_debugfs_init(struct spi_device *spi)
 {
 	struct wcd_spi_priv *wcd_spi = spi_get_drvdata(spi);
@@ -1261,7 +1256,7 @@ static int wcd_spi_debugfs_init(struct spi_device *spi)
 done:
 	return rc;
 }
-
+#endif
 
 static const struct reg_default wcd_spi_defaults[] = {
 	{WCD_SPI_SLAVE_SANITY, 0xDEADBEEF},
@@ -1396,8 +1391,10 @@ static int wcd_spi_component_bind(struct device *dev,
 		goto done;
 	}
 
+	#ifdef CONFIG_DEBUG_FS
 	if (wcd_spi_debugfs_init(spi))
 		dev_err(&spi->dev, "%s: Failed debugfs init\n", __func__);
+	#endif
 
 	spi_message_init(&wcd_spi->msg1);
 	spi_message_add_tail(&wcd_spi->xfer1, &wcd_spi->msg1);

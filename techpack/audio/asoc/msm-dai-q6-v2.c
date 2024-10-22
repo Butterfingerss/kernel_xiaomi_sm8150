@@ -4140,9 +4140,9 @@ static int msm_auxpcm_dev_probe(struct platform_device *pdev)
 	}
 
 	auxpcm_pdata->mode_8k.slot_mapping =
-					kzalloc(sizeof(uint16_t) *
-					    auxpcm_pdata->mode_8k.num_slots,
-					    GFP_KERNEL);
+					kcalloc(auxpcm_pdata->mode_8k.num_slots,
+						sizeof(uint16_t),
+						GFP_KERNEL);
 	if (!auxpcm_pdata->mode_8k.slot_mapping) {
 		dev_err(&pdev->dev, "%s No mem for mode_8k slot mapping\n",
 			__func__);
@@ -4155,9 +4155,9 @@ static int msm_auxpcm_dev_probe(struct platform_device *pdev)
 				(u16)be32_to_cpu(slot_mapping_array[i]);
 
 	auxpcm_pdata->mode_16k.slot_mapping =
-					kzalloc(sizeof(uint16_t) *
-					     auxpcm_pdata->mode_16k.num_slots,
-					     GFP_KERNEL);
+					kcalloc(auxpcm_pdata->mode_16k.num_slots,
+						sizeof(uint16_t),
+						GFP_KERNEL);
 
 	if (!auxpcm_pdata->mode_16k.slot_mapping) {
 		dev_err(&pdev->dev, "%s No mem for mode_16k slot mapping\n",
@@ -5062,9 +5062,7 @@ static int msm_dai_q6_mi2s_hw_params(struct snd_pcm_substream *substream,
 	struct afe_param_id_i2s_cfg *i2s = &dai_data->port_config.i2s;
 #ifdef CONFIG_SND_SOC_TFA9874_FOR_DAVI
 	u16 port_id = 0;
-#endif
 
-#ifdef CONFIG_SND_SOC_TFA9874_FOR_DAVI
 	if (msm_mi2s_get_port_id(dai->id, substream->stream,
 				 &port_id) != 0) {
 		dev_err(dai->dev, "%s: Invalid Port ID 0x%x\n",
@@ -5072,7 +5070,6 @@ static int msm_dai_q6_mi2s_hw_params(struct snd_pcm_substream *substream,
 		return -EINVAL;
 	}
 #endif
-
 	dai_data->channels = params_channels(params);
 	switch (dai_data->channels) {
 	case 15:
@@ -6347,6 +6344,7 @@ static struct platform_driver msm_dai_q6_dev = {
 		.name = "msm-dai-q6-dev",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_q6_dev_dt_match,
+		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 
@@ -6384,6 +6382,7 @@ static struct platform_driver msm_dai_q6 = {
 		.name = "msm-dai-q6",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_q6_dt_match,
+		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 
@@ -6711,6 +6710,7 @@ static struct platform_driver msm_dai_tdm_q6 = {
 		.name = "msm-dai-tdm",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_tdm_dt_match,
+		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 
@@ -8330,11 +8330,7 @@ static int msm_dai_q6_tdm_prepare(struct snd_pcm_substream *substream,
 			 * if only one port, don't do group enable as there
 			 * is no group need for only one port
 			 */
-#ifdef CONFIG_MACH_XIAOMI_NABU
-			if (dai_data->num_group_ports >= 1) {
-#else
 			if (dai_data->num_group_ports > 1) {
-#endif
 				rc = afe_port_group_enable(group_id,
 					&dai_data->group_cfg, true);
 				if (rc < 0) {
@@ -10370,6 +10366,7 @@ static struct platform_driver msm_dai_q6_tdm_driver = {
 		.name = "msm-dai-q6-tdm",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_q6_tdm_dev_dt_match,
+		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 

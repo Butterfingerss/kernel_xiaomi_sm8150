@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -137,25 +137,12 @@ do {                                                    \
 #define WCD_MBHC_JACK_BUTTON_MASK (SND_JACK_BTN_0 | SND_JACK_BTN_1 | \
 				  SND_JACK_BTN_2 | SND_JACK_BTN_3 | \
 				  SND_JACK_BTN_4 | SND_JACK_BTN_5)
-
-#ifdef CONFIG_MACH_XIAOMI_SM8150
-#define WCD_MBHC_JACK_USB_3_5_MASK (SND_JACK_UNSUPPORTED | SND_JACK_HEADSET)
-#endif
-
 #define OCP_ATTEMPT 20
-#ifdef CONFIG_MACH_XIAOMI_NABU
-#define HS_DETECT_PLUG_TIME_MS (3 * 1200)
-#else
 #define HS_DETECT_PLUG_TIME_MS (3 * 1000)
-#endif
 #define SPECIAL_HS_DETECT_TIME_MS (2 * 1000)
 #define MBHC_BUTTON_PRESS_THRESHOLD_MIN 250
 #define GND_MIC_SWAP_THRESHOLD 4
-#ifdef CONFIG_MACH_XIAOMI_NABU
-#define GND_MIC_USBC_SWAP_THRESHOLD 4
-#else
 #define GND_MIC_USBC_SWAP_THRESHOLD 2
-#endif
 #define WCD_FAKE_REMOVAL_MIN_PERIOD_MS 100
 #define HS_VREF_MIN_VAL 1400
 #define FW_READ_ATTEMPTS 15
@@ -429,30 +416,26 @@ enum mbhc_hs_pullup_iref_v2 {
 	HS_PULLUP_I_OFF,
 };
 
-struct usbc_ana_audio_config {
-	int usbc_en1_gpio;
-	int usbc_en2n_gpio;
-	int usbc_force_gpio;
-#ifdef CONFIG_MACH_XIAOMI_SM8150
-	int euro_us_hw_switch_gpio;
-	int uart_audio_switch_gpio;
-	int subpcb_id_gpio;
-#endif
-	struct device_node *usbc_en1_gpio_p; /* used by pinctrl API */
-	struct device_node *usbc_en2n_gpio_p; /* used by pinctrl API */
-	struct device_node *usbc_force_gpio_p; /* used by pinctrl API */
-#ifdef CONFIG_MACH_XIAOMI_SM8150
-	struct device_node *euro_us_hw_switch_gpio_p; /* used by pinctrl API */
-	struct device_node *uart_audio_switch_gpio_p; /* used by pinctrl API */
-	struct device_node *subpcb_id_gpio_p; /* used by pinctrl API */
-#endif
-};
-
 enum mbhc_moisture_rref {
 	R_OFF,
 	R_24_KOHM,
 	R_84_KOHM,
 	R_184_KOHM,
+};
+
+struct usbc_ana_audio_config {
+	int usbc_en1_gpio;
+	int usbc_en2_gpio;
+	int usbc_force_gpio;
+	int euro_us_hw_switch_gpio;
+	int uart_audio_switch_gpio;
+	int subpcb_id_gpio;
+	struct device_node *usbc_en1_gpio_p; /* used by pinctrl API */
+	struct device_node *usbc_en2_gpio_p; /* used by pinctrl API */
+	struct device_node *usbc_force_gpio_p; /* used by pinctrl API */
+	struct device_node *euro_us_hw_switch_gpio_p; /* used by pinctrl API */
+	struct device_node *uart_audio_switch_gpio_p; /* used by pinctrl API */
+	struct device_node *subpcb_id_gpio_p; /* used by pinctrl API */
 };
 
 struct wcd_mbhc_config {
@@ -470,17 +453,11 @@ struct wcd_mbhc_config {
 	int anc_micbias;
 	bool enable_anc_mic_detect;
 	u32 enable_usbc_analog;
-	bool moisture_duty_cycle_en;
 	struct usbc_ana_audio_config usbc_analog_cfg;
-#ifdef CONFIG_MACH_XIAOMI_SM8150
 	u32 use_fsa4476_gpio;
+	bool moisture_duty_cycle_en;
 	void (*enable_dual_adc_gpio)(struct device_node *node, bool en);
 	struct device_node *dual_adc_gpio_node;
-#endif
-	bool fsa_enable;
-#ifdef CONFIG_MACH_XIAOMI_NABU
-	bool flip_switch;
-#endif
 };
 
 struct wcd_mbhc_intr {
@@ -551,9 +528,6 @@ struct wcd_mbhc_cb {
 	bool (*mbhc_get_moisture_status)(struct wcd_mbhc *);
 	void (*mbhc_moisture_polling_ctrl)(struct wcd_mbhc *, bool);
 	void (*mbhc_moisture_detect_en)(struct wcd_mbhc *, bool);
-#if defined(CONFIG_MACH_XIAOMI_VAYU) || defined(CONFIG_MACH_XIAOMI_NABU)
-	void (*mbhc_mute_hs_tx)(struct snd_soc_codec *);
-#endif
 };
 
 struct wcd_mbhc_fn {
@@ -621,9 +595,6 @@ struct wcd_mbhc {
 
 	struct snd_soc_jack headset_jack;
 	struct snd_soc_jack button_jack;
-#ifdef CONFIG_MACH_XIAOMI_SM8150
-	struct snd_soc_jack usb_3_5_jack;
-#endif
 	struct mutex codec_resource_lock;
 
 	/* Holds codec specific interrupt mapping */
@@ -645,16 +616,17 @@ struct wcd_mbhc {
 
 	unsigned long intr_status;
 	bool is_hph_ocp_pending;
-	bool usbc_force_pr_mode;
 
-	struct wcd_mbhc_fn *mbhc_fn;
-	bool force_linein;
+	bool usbc_force_pr_mode;
 	int usbc_mode;
-	struct device_node *fsa_np;
-	struct notifier_block fsa_nb;
 	struct notifier_block psy_nb;
 	struct power_supply *usb_psy;
 	struct work_struct usbc_analog_work;
+
+	struct wcd_mbhc_fn *mbhc_fn;
+	bool force_linein;
+	struct device_node *fsa_np;
+	struct notifier_block fsa_nb;
 };
 
 void wcd_mbhc_find_plug_and_report(struct wcd_mbhc *mbhc,

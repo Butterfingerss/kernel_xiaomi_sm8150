@@ -1,5 +1,4 @@
-/* Copyright (c) 2012-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+/* Copyright (c) 2012-2020 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -999,22 +998,6 @@ static int msm_pcm_capture_copy(struct snd_pcm_substream *substream,
 			xfer = size;
 		offset = prtd->in_frame_info[idx].offset;
 		pr_debug("Offset value = %d\n", offset);
-
-		if (offset >= size) {
-			pr_err("%s: Invalid dsp buf offset\n", __func__);
-			ret = -EFAULT;
-			q6asm_cpu_buf_release(OUT, prtd->audio_client);
-			goto fail;
-		}
-
-		if ((size == 0 || size < prtd->pcm_count) && ((offset + size) < prtd->pcm_count)) {
-			memset(bufptr + offset + size, 0, prtd->pcm_count - size);
-			if (fbytes > prtd->pcm_count)
-				size = xfer = prtd->pcm_count;
-			else
-				size = xfer = fbytes;
-		}
-
 		if (copy_to_user(buf, bufptr+offset, xfer)) {
 			pr_err("Failed to copy buf to user\n");
 			ret = -EFAULT;
@@ -1792,9 +1775,6 @@ static int msm_pcm_playback_app_type_cfg_ctl_put(struct snd_kcontrol *kcontrol,
 	cfg_data.acdb_dev_id = ucontrol->value.integer.value[1];
 	if (ucontrol->value.integer.value[2] != 0)
 		cfg_data.sample_rate = ucontrol->value.integer.value[2];
-#ifdef CONFIG_MACH_XIAOMI_NABU
-	cfg_data.channel = ucontrol->value.integer.value[4];
-#endif
 	pr_debug("%s: fe_id- %llu session_type- %d be_id- %d app_type- %d acdb_dev_id- %d sample_rate- %d\n",
 		__func__, fe_id, session_type, be_id,
 		cfg_data.app_type, cfg_data.acdb_dev_id, cfg_data.sample_rate);
@@ -1828,9 +1808,6 @@ static int msm_pcm_playback_app_type_cfg_ctl_get(struct snd_kcontrol *kcontrol,
 	ucontrol->value.integer.value[1] = cfg_data.acdb_dev_id;
 	ucontrol->value.integer.value[2] = cfg_data.sample_rate;
 	ucontrol->value.integer.value[3] = be_id;
-#ifdef CONFIG_MACH_XIAOMI_NABU
-	ucontrol->value.integer.value[4] = cfg_data.channel;
-#endif
 	pr_debug("%s: fedai_id %llu, session_type %d, be_id %d, app_type %d, acdb_dev_id %d, sample_rate %d\n",
 		__func__, fe_id, session_type, be_id,
 		cfg_data.app_type, cfg_data.acdb_dev_id, cfg_data.sample_rate);

@@ -274,8 +274,8 @@ enum {
 	MSM_FRONTEND_DAI_MAX,
 };
 
-#define MSM_FRONTEND_DAI_MM_SIZE (MSM_FRONTEND_DAI_VOLTE_STUB + 1)
-#define MSM_FRONTEND_DAI_MM_MAX_ID MSM_FRONTEND_DAI_VOLTE_STUB
+#define MSM_FRONTEND_DAI_MM_SIZE (MSM_FRONTEND_DAI_MULTIMEDIA31 + 1)
+#define MSM_FRONTEND_DAI_MM_MAX_ID MSM_FRONTEND_DAI_MULTIMEDIA31
 
 enum {
 	MSM_BACKEND_DAI_PRI_I2S_RX = 0,
@@ -564,9 +564,6 @@ struct msm_pcm_stream_app_type_cfg {
 	int app_type;
 	int acdb_dev_id;
 	int sample_rate;
-#ifdef CONFIG_MACH_XIAOMI_NABU
-	int channel;
-#endif
 };
 
 /* dai_id: front-end ID,

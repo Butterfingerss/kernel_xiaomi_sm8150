@@ -313,7 +313,7 @@ static ssize_t audio_output_latency_dbgfs_write(struct file *file,
 		pr_err("%s: err count is more %zd\n", __func__, count);
 		return -EINVAL;
 	}
-	temp  = kmalloc(2*sizeof(char), GFP_KERNEL);
+	temp  = kmalloc(2, GFP_KERNEL);
 
 	out_cold_index = 0;
 
@@ -369,7 +369,7 @@ static ssize_t audio_input_latency_dbgfs_write(struct file *file,
 		pr_err("%s: err count is more %zd\n", __func__, count);
 		return -EINVAL;
 	}
-	temp  = kmalloc(2*sizeof(char), GFP_KERNEL);
+	temp  = kmalloc(2, GFP_KERNEL);
 
 	if (temp) {
 		if (copy_from_user(temp, buf, 2*sizeof(char))) {
@@ -8348,7 +8348,7 @@ static int q6asm_memory_map_regions(struct audio_client *ac, int dir,
 		return -EINVAL;
 	}
 
-	buffer_node = kzalloc(sizeof(struct asm_buffer_node) * bufcnt,
+	buffer_node = kcalloc(bufcnt, sizeof(struct asm_buffer_node),
 				GFP_KERNEL);
 	if (!buffer_node)
 		return -ENOMEM;
@@ -10838,14 +10838,6 @@ static int q6asm_get_asm_topology_apptype(struct q6asm_cal_info *cal_info)
 		cal_block->cal_info)->topology;
 	cal_info->app_type = ((struct audio_cal_info_asm_top *)
 		cal_block->cal_info)->app_type;
-
-#if defined(CONFIG_MACH_XIAOMI_VAYU) || defined(CONFIG_MACH_XIAOMI_NABU)
-	if (0 == cal_info->topology_id) {
-		cal_info->topology_id = 0x10c68;;
-		pr_err("%s: Correct using topology %d app_type %d\n", __func__,
-			cal_info->topology_id, cal_info->app_type);
-	}
-#endif
 
 	cal_utils_mark_cal_used(cal_block);
 
